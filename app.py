@@ -5,6 +5,8 @@ import ta
 import json
 import os
 import ssl
+import plotly.graph_objects as go
+from datetime import datetime, timedelta
 
 ssl._create_default_https_context = ssl._create_unverified_context
 FAVORITES_FILE = "favorites.json"
@@ -25,8 +27,8 @@ def get_stock_name(ticker):
     except:
         return "Unknown"
 
-st.set_page_config(page_title="벨포트의 즐겨찾기 대시보드", layout="wide")
-st.title("⭐ 벨포트의 종목 즐겨찾기 + RSI 조건 필터링")
+st.set_page_config(page_title="벨포트의 주식 대시보드", layout="wide")
+st.title("⭐ 벨포트의 즐겨찾기 + RSI + 차트 대시보드")
 
 favorites = load_favorites()
 
@@ -42,12 +44,13 @@ if st.button("추가"):
     else:
         st.warning("종목 코드를 입력해주세요.")
 
+# 초기화
 if st.button("🔁 즐겨찾기 초기화"):
     favorites = []
     save_favorites(favorites)
     st.warning("즐겨찾기를 초기화했습니다.")
 
-# 즐겨찾기 테이블
+# 즐겨찾기 목록 표시
 if favorites:
     st.subheader("📌 현재 즐겨찾기 종목")
     display_data = [{"종목 코드": code, "종목명": get_stock_name(code)} for code in favorites]
@@ -76,10 +79,10 @@ if uploaded_file is not None:
     except Exception as e:
         st.error(f"업로드 실패: {e}")
 
+# RSI 필터링
 st.divider()
 st.subheader("📊 RSI 조건 필터링")
 
-# 👉 사용자 설정
 rsi_period = st.slider("RSI 계산 기준일 (기간)", min_value=1, max_value=30, value=14)
 rsi_range = st.slider("RSI 값 범위", min_value=0, max_value=100, value=(0, 30))
 st.write(f"📌 조건: RSI({rsi_period}) 값이 {rsi_range[0]} ~ {rsi_range[1]} 사이")
@@ -111,10 +114,59 @@ for ticker in favorites:
     except Exception as e:
         st.error(f"{ticker} 처리 중 오류: {e}")
 
-# 출력
 if results:
     df_result = pd.DataFrame(results, columns=["종목 코드", "종목명", "RSI"])
     st.success(f"✅ 조건을 만족한 종목 {len(df_result)}개 발견!")
     st.dataframe(df_result)
 else:
     st.warning("📭 조건을 만족한 종목이 없습니다.")
+
+# 차트 출력
+st.divider()
+st.subheader("📉 즐겨찾기 종목 차트 보기")
+
+chart_days = st.slider("차트 기간 (일)", min_value=1, max_value=365, value=30)
+start_date = (datetime.today() - timedelta(days=chart_days)).strftime("%Y-%m-%d")
+end_date = datetime.today().strftime("%Y-%m-%d")
+
+interval_map = {
+    "1초": "1s",
+    "1분": "1m",
+    "5분": "5m",
+    "10분": "15m",  # yfinance는 10m 지원 안해서 15m으로 대체
+    "30분": "30m",
+    "1시간": "60m",
+    "1일": "1d",
+    "1주일": "1wk",
+    "1개월": "1mo"
+}
+interval_label = st.selectbox("차트 간격", list(interval_map.keys()), index=6)
+chart_interval = interval_map[interval_label]
+
+for ticker in favorites:
+    try:
+        st.markdown(f"### 📈 {ticker} - {get_stock_name(ticker)}")
+        chart_data = yf.download(ticker, start=start_date, end=end_date, interval=chart_interval)
+
+        if chart_data.empty:
+            st.warning(f"{ticker}: 차트 데이터 없음")
+            continue
+
+        fig = go.Figure(data=[go.Candlestick(
+            x=chart_data.index,
+            open=chart_data["Open"],
+            high=chart_data["High"],
+            low=chart_data["Low"],
+            close=chart_data["Close"]
+        )])
+
+        fig.update_layout(
+            title=f"{ticker} 캔들차트 ({chart_days}일, {interval_label})",
+            xaxis_rangeslider_visible=False,
+            height=400
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+    except Exception as e:
+        st.error(f"{ticker} 차트 출력 오류: {e}")
