@@ -4,6 +4,7 @@ from favorites import load_favorites, save_favorites, get_stock_name
 from rsi import calculate_rsi
 from chart import plot_chart
 from utils import handle_file_upload
+from pycoingecko import CoinGeckoAPI
 
 # 환율 정보 (KRW/USD)
 usd_krw_price, usd_krw_change, usd_krw_percent = get_index_data("KRW=X")
