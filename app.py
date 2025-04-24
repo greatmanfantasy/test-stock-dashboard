@@ -13,7 +13,9 @@ def get_bitcoin_price():  # 이 함수가 없으면 에러 발생
     return data['bitcoin']['usd']
 
 # 현재 시간 기록
-current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+# 한국 표준시(KST)로 시간 변환
+kst = pytz.timezone('Asia/Seoul')
+current_time = datetime.now(kst).strftime("%Y-%m-%d %H:%M:%S")  # KST로 현재 시간 가져오기
 
 # 환율 정보 (KRW/USD)
 usd_krw_price, usd_krw_change, usd_krw_percent = get_index_data("KRW=X")
