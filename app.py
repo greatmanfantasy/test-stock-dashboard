@@ -11,6 +11,9 @@ def get_bitcoin_price():  # 이 함수가 없으면 에러 발생
     data = cg.get_price(ids='bitcoin', vs_currencies='usd')  # 비트코인 시세 가져오기
     return data['bitcoin']['usd']
 
+# 현재 시간 기록
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
 # 환율 정보 (KRW/USD)
 usd_krw_price, usd_krw_change, usd_krw_percent = get_index_data("KRW=X")
 # 공포지수 (VIX)
@@ -24,7 +27,7 @@ kosdaq_price, kosdaq_change, kosdaq_percent = get_index_data("^KQ11")
 btc_price = get_bitcoin_price()
 
 # Streamlit 앱 상단에 정보 표시
-st.markdown("### 📊 시장 요약 정보")
+st.markdown(f"### 📊 시장 요약 정보 (업데이트: {current_time})")  # 추가된 부분: 업데이트 시간 표시
 
 # 첫 번째 줄: 환율과 공포지수
 col1, col2 = st.columns(2)
