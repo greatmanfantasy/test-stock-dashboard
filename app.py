@@ -6,6 +6,7 @@ from chart import plot_chart
 from utils import handle_file_upload
 from pycoingecko import CoinGeckoAPI
 from datetime import datetime, timedelta
+import pytz
 
 def get_bitcoin_price():  # 이 함수가 없으면 에러 발생
     cg = CoinGeckoAPI()
