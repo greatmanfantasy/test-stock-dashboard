@@ -6,6 +6,11 @@ from chart import plot_chart
 from utils import handle_file_upload
 from pycoingecko import CoinGeckoAPI
 
+def get_bitcoin_price():  # 이 함수가 없으면 에러 발생
+    cg = CoinGeckoAPI()
+    data = cg.get_price(ids='bitcoin', vs_currencies='usd')  # 비트코인 시세 가져오기
+    return data['bitcoin']['usd']
+
 # 환율 정보 (KRW/USD)
 usd_krw_price, usd_krw_change, usd_krw_percent = get_index_data("KRW=X")
 # 공포지수 (VIX)
